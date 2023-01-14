@@ -78,7 +78,9 @@ __Note :__ This adapter may have some unique changes. [Docs](https://laravel.com
 
 ```php
 View::directive('now', function ($format = null) {
-    return '<?php echo $format === null ? date("Y-m-d H:i:s") : date($format); ?>';
+    return '<?php echo '
+            . ($format === null ? 'date("Y-m-d H:i:s")' : 'date(' . $format . ')')
+            . ' ?>';
 });
 
 // @now
