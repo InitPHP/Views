@@ -1,0 +1,26 @@
+{
+    "name": "initphp/views",
+    "description": "InitPHP Views Engine",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "InitPHP\\Views\\": "src/"
+        },
+        "files": [
+            "src/Helpers/View_helper.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Muhammet ŞAFAK",
+            "email": "info@muhammetsafak.com.tr",
+            "homepage": "https://www.muhammetsafak.com.tr",
+            "role": "Developer"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=8.0"
+    }
+}
