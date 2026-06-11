@@ -1,92 +1,137 @@
 <?php
+
 /**
  * PurePHPAdapter.php
  *
  * This file is part of InitPHP Views.
  *
  * @author     Muhammet ŞAFAK <info@muhammetsafak.com.tr>
- * @copyright  Copyright © 2022 Muhammet ŞAFAK
- * @license    ./LICENSE  MIT
- * @version    1.0
- * @link       https://www.muhammetsafak.com.tr
+ * @copyright  Copyright © 2022 InitPHP
+ * @license    https://github.com/InitPHP/Views/blob/main/LICENSE  MIT
+ * @link       https://github.com/InitPHP/Views
  */
+
+declare(strict_types=1);
 
 namespace InitPHP\Views\Adapters;
 
 use InitPHP\Views\Exceptions\ViewException;
 use InitPHP\Views\Exceptions\ViewInvalidArgumentException;
+use Throwable;
 
-use const PHP_VERSION_ID;
-use const DIRECTORY_SEPARATOR;
+use function extract;
 use function is_dir;
 use function is_file;
-use function rtrim;
 use function ltrim;
-use function extract;
-use function ob_start;
 use function ob_end_clean;
-use function substr;
+use function ob_get_clean;
+use function ob_start;
+use function realpath;
+use function str_ends_with;
+use function str_starts_with;
 
-class PurePHPAdapter extends AdapterAbstract implements \InitPHP\Views\Interfaces\ViewAdapterInterface
+use const DIRECTORY_SEPARATOR;
+use const EXTR_SKIP;
+
+/**
+ * Renders plain PHP view files.
+ *
+ * View files are ordinary `.php` files included at render time. Each file is
+ * evaluated in an isolated scope that receives the merged data as local
+ * variables and has no access to the adapter instance. Resolved paths are
+ * confined to the configured base directory.
+ */
+class PurePHPAdapter extends AdapterAbstract
 {
-
+    /** Canonical base directory, always ending with a directory separator. */
     private string $dir;
 
-    private string $content = '';
-
+    /**
+     * @param string $viewDir Directory that contains the `.php` view files.
+     * @throws ViewInvalidArgumentException If the directory does not exist.
+     */
     public function __construct(string $viewDir)
     {
-        if (!is_dir($viewDir)) {
+        $real = realpath($viewDir);
+        if ($real === false || !is_dir($real)) {
             throw new ViewInvalidArgumentException('The "' . $viewDir . '" directory could not be found.');
         }
 
-        $this->dir = rtrim($viewDir, '\\/') . DIRECTORY_SEPARATOR;
+        $this->dir = $real . DIRECTORY_SEPARATOR;
     }
 
-    public function __destruct()
-    {
-        unset($this->dir, $this->content);
-    }
-
+    /**
+     * Render the queued view files and return their combined output.
+     *
+     * The queue and data are cleared once rendering finishes, whether or not
+     * it succeeds, so the adapter can be reused safely.
+     *
+     * @return string
+     * @throws ViewException If a queued view file cannot be found, or resolves
+     *                       outside the configured view directory.
+     */
     public function render(): string
     {
-        $views = [];
+        $paths = [];
         foreach ($this->views as $view) {
-            $path = $this->get_path($view);
-            if(!is_file($path)){
+            $path = $this->getPath($view);
+            if (!is_file($path)) {
                 throw new ViewException('"' . $path . '" view file not found.');
             }
-            $views[] = $path;
+            $real = realpath($path);
+            if ($real === false || !str_starts_with($real, $this->dir)) {
+                throw new ViewException('The "' . $view . '" view resolves outside the view directory.');
+            }
+            $paths[] = $real;
         }
-        $this->views = [];
+        $data = $this->data;
 
-        if(!empty($this->data)){
-            $data = $this->data;
-            extract($data);
+        try {
+            return $this->requireToString($paths, $data);
+        } finally {
+            $this->flush();
         }
-
-        ob_start(function ($tmp) {
-            $this->content .= $tmp;
-        });
-        foreach ($views as $view) {
-            require $view;
-        }
-        unset($views);
-        ob_end_clean();
-        $this->data = [];
-
-        return $this->content;
     }
 
-    private function get_path(string $view): string
+    /**
+     * Include the given view files and capture their combined output.
+     *
+     * @param list<string>         $paths Absolute, verified view file paths.
+     * @param array<string, mixed> $data  Variables exposed to each view.
+     * @return string
+     * @throws Throwable Re-thrown from a view file after the output buffer is discarded.
+     */
+    private function requireToString(array $paths, array $data): string
     {
-        if (PHP_VERSION_ID > 80000) {
-            !\str_ends_with($view, '.php') && $view .= '.php';
-        } else {
-            !substr($view, -4) != '.php' && $view .= '.php';
+        $renderer = static function (string $viewPath, array $viewData): void {
+            extract($viewData, EXTR_SKIP);
+            require $viewPath;
+        };
+
+        ob_start();
+        try {
+            foreach ($paths as $path) {
+                $renderer($path, $data);
+            }
+        } catch (Throwable $e) {
+            ob_end_clean();
+
+            throw $e;
+        }
+
+        return (string) ob_get_clean();
+    }
+
+    /**
+     * Resolve a view name to an absolute path, appending the `.php` extension
+     * when it is missing.
+     */
+    private function getPath(string $view): string
+    {
+        if (!str_ends_with($view, '.php')) {
+            $view .= '.php';
         }
 
         return $this->dir . ltrim($view, '/\\');
     }
-
 }

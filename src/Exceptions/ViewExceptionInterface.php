@@ -1,7 +1,7 @@
 <?php
 
 /**
- * ViewException.php
+ * ViewExceptionInterface.php
  *
  * This file is part of InitPHP Views.
  *
@@ -15,12 +15,14 @@ declare(strict_types=1);
 
 namespace InitPHP\Views\Exceptions;
 
-use RuntimeException;
+use Throwable;
 
 /**
- * Thrown for runtime view failures, such as using the View facade before an
- * adapter has been registered or rendering a view file that cannot be found.
+ * Marker interface implemented by every exception this package throws.
+ *
+ * Catching this interface lets callers handle any failure originating from
+ * InitPHP Views without depending on a concrete exception class.
  */
-class ViewException extends RuntimeException implements ViewExceptionInterface
+interface ViewExceptionInterface extends Throwable
 {
 }

@@ -1,21 +1,22 @@
 <?php
+
 /**
  * BladeAdapter.php
  *
  * This file is part of InitPHP Views.
  *
  * @author     Muhammet ŞAFAK <info@muhammetsafak.com.tr>
- * @copyright  Copyright © 2022 Muhammet ŞAFAK
- * @license    ./LICENSE  MIT
- * @version    1.0
- * @link       https://www.muhammetsafak.com.tr
+ * @copyright  Copyright © 2022 InitPHP
+ * @license    https://github.com/InitPHP/Views/blob/main/LICENSE  MIT
+ * @link       https://github.com/InitPHP/Views
  */
+
+declare(strict_types=1);
 
 namespace InitPHP\Views\Adapters;
 
+use Closure;
 use Illuminate\Container\Container;
-use Illuminate\Contracts\Container\Container as ContainerInterface;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\View;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Filesystem\Filesystem;
@@ -23,127 +24,237 @@ use Illuminate\Support\Facades\Facade;
 use Illuminate\View\Compilers\BladeCompiler;
 use Illuminate\View\Factory;
 use Illuminate\View\ViewServiceProvider;
+use InitPHP\Views\Exceptions\ViewInvalidArgumentException;
 
-use function is_string;
-use function call_user_func_array;
+use function is_dir;
 
-class BladeAdapter extends AdapterAbstract implements \InitPHP\Views\Interfaces\ViewAdapterInterface
+/**
+ * Renders templates with the Laravel Blade engine (illuminate/view).
+ *
+ * The adapter wires up a minimal Illuminate container so Blade can run without
+ * a full Laravel application. The Blade {@see Factory} and {@see BladeCompiler}
+ * are exposed through dedicated methods and a generic {@see self::__call()}
+ * that forwards any other call to the factory.
+ *
+ * @method array<string, mixed> getShared()                                 Every value shared with the factory.
+ * @method mixed                 shared(string $key, mixed $default = null)  Read a single shared value.
+ * @method void                  addLocation(string $location)              Register an extra template directory.
+ */
+class BladeAdapter extends AdapterAbstract
 {
+    private Container $container;
 
-    protected Application|ContainerInterface|Container $container;
+    private Factory $factory;
 
-    /**
-     * @var Factory
-     */
-    private mixed $factory;
+    private BladeCompiler $compiler;
 
     /**
-     * @var BladeCompiler
+     * @param string|array<int, string> $viewDir   One directory, or a list of directories, holding the Blade templates.
+     * @param string                    $cacheDir  Writable directory for the compiled templates.
+     * @param Container|null             $container Optional pre-built Illuminate container.
+     * @throws ViewInvalidArgumentException If a view directory or the cache directory does not exist.
      */
-    private mixed $compiler;
-
-    public function __construct(string|array $viewDir, string $cacheDir, ?ContainerInterface $container = null)
+    public function __construct(string|array $viewDir, string $cacheDir, ?Container $container = null)
     {
-        $this->container = $container !== null ? $container : new Container();
-
-        if(is_string($viewDir)){
-            $viewDir = [$viewDir];
+        $viewDirs = \is_string($viewDir) ? [$viewDir] : $viewDir;
+        foreach ($viewDirs as $dir) {
+            if (!is_dir($dir)) {
+                throw new ViewInvalidArgumentException('The view directory "' . $dir . '" could not be found.');
+            }
+        }
+        if (!is_dir($cacheDir)) {
+            throw new ViewInvalidArgumentException('The cache directory "' . $cacheDir . '" could not be found.');
         }
 
-        $this->setupContainer($viewDir, $cacheDir);
+        $this->container = $container ?? new BladeContainer();
 
+        $this->setupContainer($viewDirs, $cacheDir);
+
+        // Illuminate types ViewServiceProvider for a full Application, but it
+        // only consumes container bindings, so a bare Container is enough here.
+        /** @phpstan-ignore argument.type */
         (new ViewServiceProvider($this->container))->register();
 
-        $this->factory = $this->container->get('view');
-        $this->compiler = $this->container->get('blade.compiler');
+        $factory = $this->container->get('view');
+        $compiler = $this->container->get('blade.compiler');
+        \assert($factory instanceof Factory);
+        \assert($compiler instanceof BladeCompiler);
+
+        $this->factory = $factory;
+        $this->compiler = $compiler;
     }
 
-    public function __call(string $method, array $params)
+    /**
+     * Forward any otherwise-undefined call to the Blade view factory.
+     *
+     * @param string             $method
+     * @param array<int, mixed>  $params
+     * @return mixed
+     */
+    public function __call(string $method, array $params): mixed
     {
-        return call_user_func_array([$this->factory, $method], $params);
+        return $this->factory->{$method}(...$params);
     }
 
+    /**
+     * Render every queued view with the merged data and return the
+     * concatenated output. The queue and data are cleared afterwards.
+     *
+     * @return string
+     */
     public function render(): string
     {
-        $content = '';
-        foreach ($this->views as $view) {
-            $content .= $this->make($view, $this->data)->render();
+        try {
+            $content = '';
+            foreach ($this->views as $view) {
+                $content .= $this->make($view, $this->data)->render();
+            }
+
+            return $content;
+        } finally {
+            $this->flush();
         }
-        return $content;
     }
 
-    public function make($view, $data = [], $mergeData = []): View
+    /**
+     * Build a Blade view instance from a view name.
+     *
+     * @param string               $view
+     * @param array<string, mixed> $data
+     * @param array<string, mixed> $mergeData
+     * @return View
+     */
+    public function make(string $view, array $data = [], array $mergeData = []): View
     {
         return $this->factory->make($view, $data, $mergeData);
     }
 
-    public function if($name, callable $callback)
-    {
-        $this->compiler->if($name, $callback);
-    }
-
-    public function exists($view): bool
-    {
-        return $this->factory->exists($view);
-    }
-
-    public function file($path, $data = [], $mergeData = []): View
+    /**
+     * Build a Blade view instance from an absolute file path.
+     *
+     * @param string               $path
+     * @param array<string, mixed> $data
+     * @param array<string, mixed> $mergeData
+     * @return View
+     */
+    public function file(string $path, array $data = [], array $mergeData = []): View
     {
         return $this->factory->file($path, $data, $mergeData);
     }
 
-    public function share($key, $value = null)
+    /**
+     * Whether the given view exists.
+     */
+    public function exists(string $view): bool
+    {
+        return $this->factory->exists($view);
+    }
+
+    /**
+     * Share a piece of data with every view rendered by the factory.
+     *
+     * @param array<string, mixed>|string $key
+     * @param mixed                        $value
+     * @return mixed
+     */
+    public function share(array|string $key, mixed $value = null): mixed
     {
         return $this->factory->share($key, $value);
     }
 
-    public function composer($views, $callback): array
+    /**
+     * Register a view composer.
+     *
+     * @param array<int, string>|string $views
+     * @param Closure|string            $callback
+     * @return array<array-key, mixed> The registered composer callbacks.
+     */
+    public function composer(array|string $views, Closure|string $callback): array
     {
         return $this->factory->composer($views, $callback);
     }
 
-    public function creator($views, $callback): array
+    /**
+     * Register a view creator.
+     *
+     * @param array<int, string>|string $views
+     * @param Closure|string            $callback
+     * @return array<array-key, mixed> The registered creator callbacks.
+     */
+    public function creator(array|string $views, Closure|string $callback): array
     {
         return $this->factory->creator($views, $callback);
     }
 
-    public function addNamespace($namespace, $hints): self
+    /**
+     * Add a namespace hint to the view finder.
+     *
+     * @param string                    $namespace
+     * @param array<int, string>|string $hints
+     * @return static
+     */
+    public function addNamespace(string $namespace, array|string $hints): static
     {
         $this->factory->addNamespace($namespace, $hints);
 
         return $this;
     }
 
-    public function replaceNamespace($namespace, $hints): self
+    /**
+     * Replace the registered hints for a namespace.
+     *
+     * @param string                    $namespace
+     * @param array<int, string>|string $hints
+     * @return static
+     */
+    public function replaceNamespace(string $namespace, array|string $hints): static
     {
         $this->factory->replaceNamespace($namespace, $hints);
 
         return $this;
     }
 
-    public function directive(string $name, callable $handler)
+    /**
+     * Register a custom Blade directive on the compiler.
+     */
+    public function directive(string $name, callable $handler): void
     {
         $this->compiler->directive($name, $handler);
     }
 
-    private function setupContainer(array $viewPaths, string $cachePath)
+    /**
+     * Register a custom Blade "if" statement on the compiler.
+     */
+    public function if(string $name, callable $callback): void
     {
-        $this->container->bindIf('files', function () {
-            return new Filesystem;
-        }, true);
-
-        $this->container->bindIf('events', function () {
-            return new Dispatcher;
-        }, true);
-
-        $this->container->bindIf('config', function () use ($viewPaths, $cachePath) {
-            return [
-                'view.paths' => $viewPaths,
-                'view.compiled' => $cachePath,
-            ];
-        }, true);
-
-        Facade::setFacadeApplication($this->container);
+        $this->compiler->if($name, $callback);
     }
 
+    /**
+     * Bind the filesystem, event dispatcher and view configuration the Blade
+     * factory needs, then point the Facade root at this container.
+     *
+     * @param array<int, string> $viewPaths
+     * @param string             $cachePath
+     */
+    private function setupContainer(array $viewPaths, string $cachePath): void
+    {
+        // Illuminate's view engine factories resolve their dependencies from
+        // the global container instance, so this one must become that instance.
+        Container::setInstance($this->container);
+
+        $this->container->bindIf('files', static fn (): Filesystem => new Filesystem(), true);
+
+        $this->container->bindIf('events', static fn (): Dispatcher => new Dispatcher(), true);
+
+        $this->container->bindIf('config', static fn (): BladeConfig => new BladeConfig([
+            'view.paths' => $viewPaths,
+            'view.compiled' => $cachePath,
+        ]), true);
+
+        // Same Application/Container typing gap as in the constructor: the
+        // Facade root only needs a container to resolve bindings from.
+        /** @phpstan-ignore argument.type */
+        Facade::setFacadeApplication($this->container);
+    }
 }

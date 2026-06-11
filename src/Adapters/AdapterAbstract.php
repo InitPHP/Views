@@ -1,36 +1,42 @@
 <?php
+
 /**
  * AdapterAbstract.php
  *
  * This file is part of InitPHP Views.
  *
  * @author     Muhammet ŞAFAK <info@muhammetsafak.com.tr>
- * @copyright  Copyright © 2022 Muhammet ŞAFAK
- * @license    ./LICENSE  MIT
- * @version    1.0
- * @link       https://www.muhammetsafak.com.tr
+ * @copyright  Copyright © 2022 InitPHP
+ * @license    https://github.com/InitPHP/Views/blob/main/LICENSE  MIT
+ * @link       https://github.com/InitPHP/Views
  */
+
+declare(strict_types=1);
 
 namespace InitPHP\Views\Adapters;
 
-use InitPHP\Views\Exceptions\ViewInvalidArgumentException;
+use InitPHP\Views\Interfaces\ViewAdapterInterface;
 
-use function array_merge;
-use function is_object;
-use function is_array;
 use function get_object_vars;
-use function array_key_exists;
 
-abstract class AdapterAbstract implements \InitPHP\Views\Interfaces\ViewAdapterInterface
+/**
+ * Shared state and behaviour for view adapters.
+ *
+ * Concrete adapters only have to implement {@see self::render()}; queueing
+ * views, merging data and reading it back are handled here.
+ */
+abstract class AdapterAbstract implements ViewAdapterInterface
 {
-
-    private array $configurations = [];
-
+    /** @var list<string> Queued view identifiers, in render order. */
     protected array $views = [];
 
+    /** @var array<string, mixed> Data merged across setData() calls. */
     protected array $data = [];
 
-    public function __toString()
+    /**
+     * Render the queued views; equivalent to calling {@see self::render()}.
+     */
+    public function __toString(): string
     {
         return $this->render();
     }
@@ -38,26 +44,27 @@ abstract class AdapterAbstract implements \InitPHP\Views\Interfaces\ViewAdapterI
     /**
      * @inheritDoc
      */
-    public function setView(string ...$views): self
+    public function setView(string ...$views): static
     {
-        $this->views = array_merge($this->views, $views);
+        foreach ($views as $view) {
+            $this->views[] = $view;
+        }
 
         return $this;
     }
 
     /**
      * @inheritDoc
+     *
+     * @param array<string, mixed>|object $data
      */
-    public function setData(array|object $data): self
+    public function setData(array|object $data): static
     {
-        if(is_object($data)){
+        if (\is_object($data)) {
             $data = get_object_vars($data);
         }
-        if(!is_array($data)){
-            throw new ViewInvalidArgumentException('$data can be just an array or an object.');
-        }
-        if(!empty($data)){
-            $this->data = array_merge($this->data, $data);
+        foreach ($data as $key => $value) {
+            $this->data[(string) $key] = $value;
         }
 
         return $this;
@@ -66,13 +73,13 @@ abstract class AdapterAbstract implements \InitPHP\Views\Interfaces\ViewAdapterI
     /**
      * @inheritDoc
      */
-    public function getData(?string $key, mixed $default = null): mixed
+    public function getData(?string $key = null, mixed $default = null): mixed
     {
-        if (null === $key) {
+        if ($key === null) {
             return $this->data;
         }
 
-        return array_key_exists($key, $this->data) ? $this->data[$key] : $default;
+        return \array_key_exists($key, $this->data) ? $this->data[$key] : $default;
     }
 
     /**
@@ -80,21 +87,15 @@ abstract class AdapterAbstract implements \InitPHP\Views\Interfaces\ViewAdapterI
      */
     abstract public function render(): string;
 
-    protected function setConfigurations(array $configurations = []): self
+    /**
+     * Clear the queued views and merged data.
+     *
+     * Adapters call this once a render finishes so the instance can be reused
+     * for an independent render without leaking the previous run's state.
+     */
+    protected function flush(): void
     {
-        $this->configurations = $configurations;
-
-        return $this;
+        $this->views = [];
+        $this->data = [];
     }
-
-    protected function getConfigurations(): array
-    {
-        return $this->configurations;
-    }
-
-    protected function getConfiguration(string $key, $default = null)
-    {
-        return array_key_exists($key, $this->configurations) ? $this->configurations[$key] : $default;
-    }
-
 }
