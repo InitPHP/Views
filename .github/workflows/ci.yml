@@ -84,6 +84,13 @@ jobs:
           key: composer-${{ matrix.php }}-${{ matrix.deps }}-${{ hashFiles('**/composer.json') }}
           restore-keys: composer-${{ matrix.php }}-${{ matrix.deps }}-
 
+      # twig/twig 3.x requires PHP >= 8.1, but this package still supports 8.0
+      # (Twig is an optional adapter). Drop it on the 8.0 job so dependency
+      # resolution succeeds; TwigAdapterTest skips itself when twig/twig is absent.
+      - name: Drop optional Twig on PHP 8.0
+        if: matrix.php == '8.0'
+        run: composer remove --dev twig/twig --no-update
+
       - name: Install highest dependencies
         if: matrix.deps == 'highest'
         run: composer update --prefer-dist --no-progress --no-interaction
