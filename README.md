@@ -4,6 +4,7 @@ A small, adapter-based view rendering layer for PHP. Write your application
 against one tiny interface and render with plain PHP, [Blade](https://laravel.com/docs/blade)
 or [Twig](https://twig.symfony.com/) — switching engines is a one-line change.
 
+[![Designed & Maintained with Tan](https://www.muhammetsafak.com.tr/badges/designed-maintained-with-tan.svg)](https://www.muhammetsafak.com.tr/en/tan/)
 [![CI](https://github.com/InitPHP/Views/actions/workflows/ci.yml/badge.svg)](https://github.com/InitPHP/Views/actions/workflows/ci.yml)
 [![Latest Stable Version](http://poser.pugx.org/initphp/views/v)](https://packagist.org/packages/initphp/views) [![Total Downloads](http://poser.pugx.org/initphp/views/downloads)](https://packagist.org/packages/initphp/views) [![License](http://poser.pugx.org/initphp/views/license)](https://packagist.org/packages/initphp/views) [![PHP Version Require](http://poser.pugx.org/initphp/views/require/php)](https://packagist.org/packages/initphp/views)
 
