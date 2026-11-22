@@ -1,7 +1,8 @@
-# Blade adapter
+# Blade Adapter
 
-`InitPHP\Views\Adapters\BladeAdapter` renders [Laravel Blade](https://laravel.com/docs/blade)
-templates without a full Laravel application.
+`InitPHP\Views\Adapters\BladeAdapter` renders
+[Laravel Blade](https://laravel.com/docs/blade) templates **without a full
+Laravel application** — it bootstraps a minimal Illuminate container for you.
 
 ## Requirements
 
@@ -9,7 +10,8 @@ templates without a full Laravel application.
 composer require illuminate/view
 ```
 
-`illuminate/view` `^9.0`, `^10.0` and `^11.0` are supported.
+The package's test suite runs against `illuminate/view` `^9.0`, `^10.0` and
+`^11.0`.
 
 ## Construction
 
@@ -24,9 +26,10 @@ public function __construct(
 - `$viewDir` — a template directory, or an array of directories.
 - `$cacheDir` — a writable directory for compiled templates.
 - `$container` — optional; a pre-built Illuminate container. When omitted, the
-  adapter builds a minimal container itself.
+  adapter builds a minimal one itself.
 
-Every directory must exist, or a `ViewInvalidArgumentException` is thrown.
+Every directory must exist, or a [`ViewInvalidArgumentException`](Exceptions.md) is
+thrown.
 
 ```php
 use InitPHP\Views\Facade\View;
@@ -35,9 +38,15 @@ use InitPHP\Views\Adapters\BladeAdapter;
 View::via(new BladeAdapter(__DIR__ . '/views', __DIR__ . '/cache'));
 ```
 
+Multiple template roots:
+
+```php
+new BladeAdapter([__DIR__ . '/views', __DIR__ . '/vendor-views'], __DIR__ . '/cache');
+```
+
 ## Rendering
 
-Blade view names are dotted/slashed and omit the `.blade.php` extension:
+Blade view names are dotted or slashed and omit the `.blade.php` extension:
 
 ```php
 echo view('dashboard', ['username' => 'admin']);   // views/dashboard.blade.php
@@ -55,9 +64,11 @@ Render several views in order:
 echo view(['layouts.header', 'pages.home', 'layouts.footer'], ['title' => 'Home']);
 ```
 
+Blade escapes `{{ }}` output by default — use `{!! !!}` only for trusted HTML.
+
 ## Custom directives and conditionals
 
-Register these on the adapter instance (keep a reference to it):
+Register these on the **adapter instance** (keep a reference to it), then render:
 
 ```php
 $blade = new BladeAdapter(__DIR__ . '/views', __DIR__ . '/cache');
@@ -83,7 +94,7 @@ Published: @datetime($post->published_at)
 The adapter exposes the most common Blade factory methods directly:
 
 | Method | Returns | Purpose |
-| ------ | ------- | ------- |
+| --- | --- | --- |
 | `make(string $view, array $data = [], array $mergeData = [])` | `View` | Build a view instance from a name. |
 | `file(string $path, array $data = [], array $mergeData = [])` | `View` | Build a view instance from an absolute path. |
 | `exists(string $view)` | `bool` | Whether a view exists. |
@@ -96,14 +107,17 @@ The adapter exposes the most common Blade factory methods directly:
 | `if(string $name, callable $callback)` | `void` | Register a custom `if` conditional. |
 
 Any other method call is forwarded to the underlying
-`Illuminate\View\Factory`, so factory methods such as `getShared()` work too:
+`Illuminate\View\Factory`, so factory methods such as `getShared()`,
+`shared()` and `addLocation()` work too:
 
 ```php
 $blade->share('appName', 'InitPHP');
-$shared = $blade->getShared();   // ['appName' => 'InitPHP', ...]
+$blade->getShared();              // ['appName' => 'InitPHP', ...]  (via __call)
 ```
 
-A view composer that injects data:
+### View composers
+
+A composer injects data into a view every time it renders:
 
 ```php
 use Illuminate\Contracts\View\View as BladeView;
@@ -111,17 +125,46 @@ use Illuminate\Contracts\View\View as BladeView;
 $blade->composer('profile', static function (BladeView $view): void {
     $view->with('greeting', 'Hello');
 });
+
+echo view('profile');   // $greeting is available even though we passed no data
+```
+
+### Namespaces
+
+```php
+$blade->addNamespace('admin', __DIR__ . '/admin-views');
+
+echo view('admin::dashboard');   // admin-views/dashboard.blade.php
+```
+
+## Working with `View` instances
+
+`make()` returns an `Illuminate\Contracts\View\View`, so you can render it
+yourself or pass it around:
+
+```php
+$view = $blade->make('card', ['title' => 'Welcome']);
+echo $view->render();
 ```
 
 ## How the standalone container is wired
 
-When you do not pass your own container, the adapter creates one, binds the
-filesystem, an event dispatcher and the view configuration, registers
-`Illuminate\View\ViewServiceProvider`, and sets itself as the global container
-instance (Blade's engine factories resolve their dependencies from it).
+When you don't pass your own container, the adapter:
 
-To support `illuminate/view` 10 and 11 outside Laravel, the adapter ships two
-small internal helpers — a container subclass that provides the `terminating()`
+1. creates a container and binds the filesystem, an event dispatcher and the
+   view configuration;
+2. registers `Illuminate\View\ViewServiceProvider`;
+3. sets itself as the **global** container instance — Blade's engine factories
+   resolve their dependencies from it.
+
+To run `illuminate/view` 9 through 11 outside Laravel, the adapter ships two
+small internal helpers: a container subclass that provides the `terminating()`
 shutdown hook the service provider expects, and a tiny configuration object the
-provider reads from. Both are implementation details and are not part of the
-public API.
+provider reads from. Both are implementation details, not part of the public
+API.
+
+## See also
+
+- [Blade documentation](https://laravel.com/docs/blade) (official)
+- [Recipes](Recipes.md)
+- [API Reference](API-Reference.md#bladeadapter)

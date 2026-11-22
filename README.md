@@ -203,19 +203,20 @@ try {
 
 Implement `InitPHP\Views\Interfaces\ViewAdapterInterface` (or extend
 `AdapterAbstract`, which already handles queueing and data) and register it with
-`View::via()`. See [docs/custom-adapter.md](docs/custom-adapter.md).
+`View::via()`. See [Custom Adapters](docs/Custom-Adapters.md).
 
 ## Documentation
 
-Full developer documentation lives in [`docs/`](docs/):
+Full developer documentation lives in [`docs/`](docs/Home.md):
 
-- [Getting started](docs/getting-started.md)
-- [The facade and the `view()` helper](docs/facade-and-helper.md)
-- [Pure PHP adapter](docs/purephp-adapter.md)
-- [Blade adapter](docs/blade-adapter.md)
-- [Twig adapter](docs/twig-adapter.md)
-- [Writing a custom adapter](docs/custom-adapter.md)
-- [Exceptions](docs/exceptions.md)
+- [Installation](docs/Installation.md) · [Quick Start](docs/Quick-Start.md)
+- [The View facade and the `view()` helper](docs/The-View-Facade-and-Helper.md)
+- [Pure PHP adapter](docs/PurePHP-Adapter.md)
+- [Blade adapter](docs/Blade-Adapter.md)
+- [Twig adapter](docs/Twig-Adapter.md)
+- [Custom Adapters](docs/Custom-Adapters.md)
+- [Exceptions](docs/Exceptions.md) · [API Reference](docs/API-Reference.md)
+- [Recipes](docs/Recipes.md) · [Testing](docs/Testing.md) · [FAQ](docs/FAQ.md)
 
 ## Contributing
 
