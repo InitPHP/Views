@@ -27,7 +27,7 @@ trait TempViewDirectory
     private function makeTempDir(): string
     {
         $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid('initphp_views_', true);
-        mkdir($dir, 0777, true);
+        mkdir($dir, 0o777, true);
         $this->tempDirs[] = $dir;
 
         return $dir;
@@ -38,7 +38,7 @@ trait TempViewDirectory
         $full = $dir . DIRECTORY_SEPARATOR . $relativePath;
         $parent = \dirname($full);
         if (!is_dir($parent)) {
-            mkdir($parent, 0777, true);
+            mkdir($parent, 0o777, true);
         }
         file_put_contents($full, $contents);
 

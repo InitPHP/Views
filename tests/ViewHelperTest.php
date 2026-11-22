@@ -27,7 +27,7 @@ final class ViewHelperTest extends TestCase
         self::assertSame('dashboard', $output);
         self::assertSame(
             [['views' => ['dashboard'], 'data' => ['user' => 'admin']]],
-            $this->adapter->renders
+            $this->adapter->renders,
         );
     }
 
@@ -38,7 +38,7 @@ final class ViewHelperTest extends TestCase
         self::assertSame('header,footer', $output);
         self::assertSame(
             [['views' => ['header', 'footer'], 'data' => []]],
-            $this->adapter->renders
+            $this->adapter->renders,
         );
     }
 }

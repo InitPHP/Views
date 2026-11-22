@@ -243,11 +243,11 @@ class BladeAdapter extends AdapterAbstract
         // the global container instance, so this one must become that instance.
         Container::setInstance($this->container);
 
-        $this->container->bindIf('files', static fn (): Filesystem => new Filesystem(), true);
+        $this->container->bindIf('files', static fn(): Filesystem => new Filesystem(), true);
 
-        $this->container->bindIf('events', static fn (): Dispatcher => new Dispatcher(), true);
+        $this->container->bindIf('events', static fn(): Dispatcher => new Dispatcher(), true);
 
-        $this->container->bindIf('config', static fn (): BladeConfig => new BladeConfig([
+        $this->container->bindIf('config', static fn(): BladeConfig => new BladeConfig([
             'view.paths' => $viewPaths,
             'view.compiled' => $cachePath,
         ]), true);

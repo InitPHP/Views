@@ -25,7 +25,7 @@ final class ViewTest extends TestCase
         self::assertSame('home', $output);
         self::assertSame(
             [['views' => ['home'], 'data' => ['user' => 'admin']]],
-            $adapter->renders
+            $adapter->renders,
         );
     }
 

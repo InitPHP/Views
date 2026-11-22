@@ -21,6 +21,4 @@ use InvalidArgumentException;
  * Thrown when a method receives an argument of an invalid value, for example a
  * view or cache directory that does not exist.
  */
-class ViewInvalidArgumentException extends InvalidArgumentException implements ViewExceptionInterface
-{
-}
+class ViewInvalidArgumentException extends InvalidArgumentException implements ViewExceptionInterface {}

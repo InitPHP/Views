@@ -28,12 +28,12 @@
         "docs": "https://github.com/InitPHP/Views/tree/main/docs"
     },
     "require": {
-        "php": ">=8.0"
+        "php": "^8.2"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.6",
         "phpstan/phpstan": "^1.12 || ^2.1",
-        "friendsofphp/php-cs-fixer": "^3.65",
+        "friendsofphp/php-cs-fixer": "^3.95",
         "illuminate/view": "^9.0 || ^10.0 || ^11.0",
         "illuminate/events": "^9.0 || ^10.0 || ^11.0",
         "illuminate/filesystem": "^9.0 || ^10.0 || ^11.0",

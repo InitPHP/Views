@@ -25,7 +25,7 @@ final class BladeContainerTest extends TestCase
     {
         $container = new BladeContainer();
 
-        self::assertSame($container, $container->terminating(static fn () => null));
+        self::assertSame($container, $container->terminating(static fn() => null));
     }
 
     public function testTerminatingCallbacksRunOnDestruction(): void

@@ -102,7 +102,7 @@ final class BladeAdapterTest extends TestCase
     {
         $this->writeView($this->viewDir, 'greet.blade.php', '@hello');
         $adapter = $this->adapter();
-        $adapter->directive('hello', static fn (): string => "<?php echo 'directive!'; ?>");
+        $adapter->directive('hello', static fn(): string => "<?php echo 'directive!'; ?>");
 
         self::assertSame('directive!', $adapter->setView('greet')->render());
     }
@@ -170,7 +170,7 @@ final class BladeAdapterTest extends TestCase
     {
         $this->writeView($this->viewDir, 'gate.blade.php', "@admin('admin')\nallowed\n@endadmin");
         $adapter = $this->adapter();
-        $adapter->if('admin', static fn (string $role): bool => $role === 'admin');
+        $adapter->if('admin', static fn(string $role): bool => $role === 'admin');
 
         self::assertSame('allowed', trim($adapter->setView('gate')->render()));
     }

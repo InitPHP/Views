@@ -51,7 +51,7 @@ final class AdapterAbstractTest extends TestCase
 
     public function testSetDataOnlyExposesPublicObjectProperties(): void
     {
-        $data = new class () {
+        $data = new class {
             public string $visible = 'yes';
             protected string $hidden = 'no';
         };
