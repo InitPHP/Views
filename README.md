@@ -10,7 +10,7 @@ or [Twig](https://twig.symfony.com/) — switching engines is a one-line change.
 
 ## Requirements
 
-- PHP 8.0 or higher
+- PHP 8.2 or higher
 
 The bundled adapters need their engine only when you use them:
 

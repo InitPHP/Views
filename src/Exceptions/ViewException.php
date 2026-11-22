@@ -21,6 +21,4 @@ use RuntimeException;
  * Thrown for runtime view failures, such as using the View facade before an
  * adapter has been registered or rendering a view file that cannot be found.
  */
-class ViewException extends RuntimeException implements ViewExceptionInterface
-{
-}
+class ViewException extends RuntimeException implements ViewExceptionInterface {}

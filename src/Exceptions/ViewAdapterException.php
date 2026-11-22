@@ -20,6 +20,4 @@ namespace InitPHP\Views\Exceptions;
  * not a usable {@see \InitPHP\Views\Interfaces\ViewAdapterInterface}
  * implementation.
  */
-class ViewAdapterException extends ViewException
-{
-}
+class ViewAdapterException extends ViewException {}

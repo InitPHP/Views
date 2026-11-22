@@ -43,9 +43,7 @@ final class View
     /**
      * The facade is purely static and must not be instantiated.
      */
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
     /**
      * Forward a static call to the registered adapter.
@@ -92,7 +90,7 @@ final class View
                 'The adapter "' . $adapter . '" cannot be created without constructor arguments; '
                 . 'pass a configured instance to View::via() instead.',
                 0,
-                $e
+                $e,
             );
         }
     }

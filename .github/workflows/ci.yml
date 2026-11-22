@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: composer update --prefer-dist --no-progress --no-interaction
       - name: Check coding standards
-        run: composer cs-check
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
 
   stan:
     name: PHPStan
@@ -58,10 +58,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ["8.0", "8.1", "8.2", "8.3", "8.4"]
+        php: ["8.2", "8.3", "8.4", "8.5"]
         deps: ["highest"]
         include:
-          - php: "8.0"
+          - php: "8.2"
             deps: "lowest"
     steps:
       - uses: actions/checkout@v4
@@ -83,13 +83,6 @@ jobs:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: composer-${{ matrix.php }}-${{ matrix.deps }}-${{ hashFiles('**/composer.json') }}
           restore-keys: composer-${{ matrix.php }}-${{ matrix.deps }}-
-
-      # twig/twig 3.x requires PHP >= 8.1, but this package still supports 8.0
-      # (Twig is an optional adapter). Drop it on the 8.0 job so dependency
-      # resolution succeeds; TwigAdapterTest skips itself when twig/twig is absent.
-      - name: Drop optional Twig on PHP 8.0
-        if: matrix.php == '8.0'
-        run: composer remove --dev twig/twig --no-update
 
       - name: Install highest dependencies
         if: matrix.deps == 'highest'

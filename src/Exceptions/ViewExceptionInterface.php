@@ -23,6 +23,4 @@ use Throwable;
  * Catching this interface lets callers handle any failure originating from
  * InitPHP Views without depending on a concrete exception class.
  */
-interface ViewExceptionInterface extends Throwable
-{
-}
+interface ViewExceptionInterface extends Throwable {}
