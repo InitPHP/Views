@@ -63,8 +63,11 @@ class PurePHPAdapter extends AdapterAbstract
     /**
      * Render the queued view files and return their combined output.
      *
-     * The queue and data are cleared once rendering finishes, whether or not
-     * it succeeds, so the adapter can be reused safely.
+     * The queue and data are cleared once the view files have been included,
+     * whether or not including them succeeds, so the adapter can be reused
+     * safely. If a queued view file cannot be found or resolves outside the view
+     * directory, the exception is thrown before that and the queue and data are
+     * left untouched.
      *
      * @return string
      * @throws ViewException If a queued view file cannot be found, or resolves
