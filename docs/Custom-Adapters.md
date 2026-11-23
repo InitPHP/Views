@@ -59,8 +59,9 @@ namespace App\View;
 use InitPHP\Views\Adapters\AdapterAbstract;
 use InitPHP\Views\Exceptions\ViewException;
 
+use function htmlspecialchars;
 use function sprintf;
-use function str_replace;
+use function strtr;
 
 final class StringAdapter extends AdapterAbstract
 {
@@ -93,11 +94,15 @@ final class StringAdapter extends AdapterAbstract
      */
     private function interpolate(string $template, array $data): string
     {
+        // HTML-escape every value: "{{ name }}" in Blade and Twig is escaped too,
+        // so templates copied from there stay safe. strtr() replaces in a single
+        // pass, so a value that contains "{{ other }}" is not expanded again.
+        $replacements = [];
         foreach ($data as $key => $value) {
-            $template = str_replace('{{ ' . $key . ' }}', (string) $value, $template);
+            $replacements['{{ ' . $key . ' }}'] = htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
         }
 
-        return $template;
+        return strtr($template, $replacements);
     }
 }
 ```
@@ -113,6 +118,11 @@ View::via(new StringAdapter([
 
 echo view('greeting', ['name' => 'admin']);   // "Hello, admin!"
 ```
+
+Because the adapter escapes with `htmlspecialchars()`, a value such as
+`<script>…</script>` is printed as text. An adapter that substitutes values
+without escaping would turn every template variable into an XSS hole for anyone
+who assumes `{{ }}` is escaped, as it is in Blade and Twig.
 
 ## Implementing the interface directly
 
