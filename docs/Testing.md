@@ -124,7 +124,7 @@ protected function setUp(): void
 `initphp/views` ships a PHPUnit suite covering the abstract adapter, all three
 built-in adapters (including Blade and Twig against their real engines), the
 facade, the helper and the exception hierarchy. Continuous integration runs
-PHP-CS-Fixer, PHPStan at the maximum level and PHPUnit across PHP 8.2–8.5 with
+PHP-CS-Fixer, PHPStan at the maximum level and PHPUnit across PHP 8.2–8.6 with
 highest dependencies, plus a lowest-dependencies run on PHP 8.2. Run the same checks locally:
 
 ```bash

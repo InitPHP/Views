@@ -10,8 +10,9 @@ Laravel application** — it bootstraps a minimal Illuminate container for you.
 composer require illuminate/view
 ```
 
-The package's test suite runs against `illuminate/view` `^9.0`, `^10.0` and
-`^11.0`.
+The adapter accepts `illuminate/view` `^9.0` through `^13.0`. CI runs the test
+suite against 9.0 (lowest dependencies), 12 (PHP 8.2) and 13 (PHP 8.3 or newer);
+10 and 11 are not exercised in CI.
 
 ## Construction
 
@@ -157,7 +158,7 @@ When you don't pass your own container, the adapter:
 3. sets itself as the **global** container instance — Blade's engine factories
    resolve their dependencies from it.
 
-To run `illuminate/view` 9 through 11 outside Laravel, the adapter ships two
+To run `illuminate/view` 9 through 13 outside Laravel, the adapter ships two
 small internal helpers: a container subclass that provides the `terminating()`
 shutdown hook the service provider expects, and a tiny configuration object the
 provider reads from. Both are implementation details, not part of the public

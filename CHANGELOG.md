@@ -4,6 +4,17 @@ All notable changes to `initphp/views` are documented here. The format is based
 on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- The CI matrix now also covers PHP 8.6. The development dependencies
+  (`illuminate/view`, `illuminate/events`, `illuminate/filesystem`) now accept
+  `^12.0` and `^13.0`, because Illuminate 11 calls `spl_object_hash()`, which
+  PHP 8.6 deprecates. CI now runs the Blade tests against Illuminate 9
+  (lowest), 12 (PHP 8.2) and 13 (PHP 8.3+); Illuminate 10 and 11 are no longer
+  exercised in CI. The `php` constraint is unchanged.
+
 ## [3.0.0] - 2026-11-22
 
 ### Changed
@@ -13,3 +24,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **BREAKING:** The code style moved to PER-CS, enforced by the shared
   PHP-CS-Fixer configuration (`.php-cs-fixer.dist.php`). The source was
   reformatted accordingly; there are no behaviour changes.
+
+[Unreleased]: https://github.com/InitPHP/Views/compare/3.0.0...HEAD
