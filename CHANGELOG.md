@@ -24,3 +24,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **BREAKING:** The code style moved to PER-CS, enforced by the shared
   PHP-CS-Fixer configuration (`.php-cs-fixer.dist.php`). The source was
   reformatted accordingly; there are no behaviour changes.
+
+[Unreleased]: https://github.com/InitPHP/Views/compare/3.0.0...HEAD
