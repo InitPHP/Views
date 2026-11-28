@@ -8,11 +8,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- The CI matrix now also covers PHP 8.6. The Blade adapter is now tested
-  against `illuminate/view` 12 and 13 as well (the development dependencies
-  accept `^12.0` and `^13.0`): Illuminate 11 calls `spl_object_hash()`, which
-  PHP 8.6 deprecates, so the Blade tests need 12 or newer on 8.6. The `php`
-  constraint is unchanged.
+- The CI matrix now also covers PHP 8.6. The development dependencies
+  (`illuminate/view`, `illuminate/events`, `illuminate/filesystem`) now accept
+  `^12.0` and `^13.0`, because Illuminate 11 calls `spl_object_hash()`, which
+  PHP 8.6 deprecates. CI now runs the Blade tests against Illuminate 9
+  (lowest), 12 (PHP 8.2) and 13 (PHP 8.3+); Illuminate 10 and 11 are no longer
+  exercised in CI. The `php` constraint is unchanged.
 
 ## [3.0.0] - 2026-11-22
 

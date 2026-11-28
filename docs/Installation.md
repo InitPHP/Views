@@ -16,7 +16,7 @@
 | Adapter | Engine package | Tested versions |
 | --- | --- | --- |
 | [Pure PHP](PurePHP-Adapter.md) | none — PHP core only | — |
-| [Blade](Blade-Adapter.md) | [`illuminate/view`](https://packagist.org/packages/illuminate/view) | `^9.0` · `^10.0` · `^11.0` · `^12.0` · `^13.0` |
+| [Blade](Blade-Adapter.md) | [`illuminate/view`](https://packagist.org/packages/illuminate/view) | `^9.0` – `^13.0` (CI runs 9, 12 and 13) |
 | [Twig](Twig-Adapter.md) | [`twig/twig`](https://packagist.org/packages/twig/twig) | `^3.0` |
 
 > The package's own test suite runs against these engine versions (they are

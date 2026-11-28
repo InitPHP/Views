@@ -10,8 +10,9 @@ Laravel application** — it bootstraps a minimal Illuminate container for you.
 composer require illuminate/view
 ```
 
-The package's test suite runs against `illuminate/view` `^9.0`, `^10.0`, `^11.0`,
-`^12.0` and `^13.0` (13 needs PHP 8.3 or newer).
+The adapter accepts `illuminate/view` `^9.0` through `^13.0`. CI runs the test
+suite against 9.0 (lowest dependencies), 12 (PHP 8.2) and 13 (PHP 8.3 or newer);
+10 and 11 are not exercised in CI.
 
 ## Construction
 
